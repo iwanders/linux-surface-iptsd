@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+
 namespace iptsd::apps::visualization {
 
 class Visualize : public core::Application {
@@ -84,6 +85,114 @@ public:
 			return;
 
 		m_history.pop_front();
+	}
+
+	void on_dft(const ipts::DftWindow & data) override
+	{
+		/*
+		Types are:
+		  IPTS_DFT_ID_POSITION
+		  IPTS_DFT_ID_BUTTON
+		  IPTS_DFT_ID_PRESSURE
+
+		data has x and y, consisting of up to 16 ipts_pen_dft_window_row.
+
+		each ipts_pen_dft_window_row has:
+		  frequency, mag
+		  IPTS_DFT_NUM_COMPONENTS = 9
+		  i16 real, i16 mag, both IPTS_DFT_NUM_COMPONENTS long
+		  first, last, mid, zero.
+
+		Each window has:
+		  (x,y) * (rows) * (components) * (real,mag)
+		  2 * 16 * 9 * 2 values
+
+		Surface Pro 9, slim pen 2:
+			position has 8 rows
+			button has 4 rows
+			pressure has 16 rows
+
+
+		constexpr u8 IPTS_DFT_ID_POSITION = 6;
+		8
+		7
+		constexpr u8 IPTS_DFT_ID_BUTTON   = 9;
+		10
+		constexpr u8 IPTS_DFT_ID_PRESSURE = 11;
+
+		*/
+		if (m_history.empty()) {
+			return;
+		}
+		if (m_history.back().button) {
+			std::cout << "BUTTON" << std::endl;
+			std::cout << "BUTTON" << std::endl;
+			std::cout << "BUTTON" << std::endl;
+		}
+		const auto ipts_dimensions_str = [](const ipts_dimensions& dim) {
+			std::stringstream ss;
+			ss << "height: " << static_cast<int>(dim.height) << std::endl;
+			ss << "width: " << static_cast<int>(dim.width) << std::endl;
+			ss << "y_min: " << static_cast<int>(dim.y_min) << std::endl;
+			ss << "y_max: " << static_cast<int>(dim.y_max) << std::endl;
+			ss << "x_min: " << static_cast<int>(dim.x_min) << std::endl;
+			ss << "x_max: " << static_cast<int>(dim.x_max) << std::endl;
+			ss << "z_min: " << static_cast<int>(dim.z_min) << std::endl;
+			ss << "z_max: " << static_cast<int>(dim.z_max) << std::endl;
+			return ss.str();
+		};
+		std::ignore = ipts_dimensions_str;
+		const auto ipts_pen_dft_window_row_str = [](const ipts_pen_dft_window_row& row) {
+			std::stringstream ss;
+			ss << "frequency: " << row.frequency << " ";
+			ss << "magnitude: " << row.magnitude << " ";
+			ss << "magnitude: " << row.magnitude << " ";
+			ss << "first: " << static_cast<int>(row.first) << " ";
+			ss << "last: " << static_cast<int>(row.last) << " ";
+			ss << "mid: " << static_cast<int>(row.mid) << " ";
+			ss << "zero: " << static_cast<int>(row.zero) << " [";
+			for (std::size_t i = 0; i < IPTS_DFT_NUM_COMPONENTS; i++)
+			{
+				ss << row.real[i] << "," << row.imag[i] << " ";
+			}
+			ss << "]";
+			return ss.str();
+		};
+		std::ignore = ipts_pen_dft_window_row_str;
+		switch (data.type) {
+		case IPTS_DFT_ID_POSITION:
+			//  std::cout << "IPTS_DFT_ID_POSITION" << std::endl;
+			//  std::cout << " rows: " << static_cast<int>(data.rows) << std::endl;
+			//  std::cout << ipts_dimensions_str(data.dim);
+			break;
+		case IPTS_DFT_ID_BUTTON:
+			std::cout << "IPTS_DFT_ID_BUTTON" << std::endl;
+			//  std::cout << ipts_dimensions_str(data.dim);
+			for (std::size_t i = 0; i < data.rows; i++)
+			{
+				std::cout << "x[i " << i << "]: ";
+				std::cout << ipts_pen_dft_window_row_str(data.x[i]) << std::endl;
+				std::cout << "y[i " << i << "]: ";
+				std::cout << ipts_pen_dft_window_row_str(data.y[i]) << std::endl;
+			}
+			break;
+		case IPTS_DFT_ID_PRESSURE:
+			//  std::cout << "IPTS_DFT_ID_PRESSURE" << std::endl;
+			//  std::cout << " rows: " << static_cast<int>(data.rows) << std::endl;
+			break;
+		default:
+			// Ignored
+			std::cout << "Type is " << static_cast<int>(data.type) << std::endl;
+			for (std::size_t i = 0; i < data.rows; i++)
+			{
+				std::cout << "x[i " << i << "]: ";
+				std::cout << ipts_pen_dft_window_row_str(data.x[i]) << std::endl;
+				std::cout << "y[i " << i << "]: ";
+				std::cout << ipts_pen_dft_window_row_str(data.y[i]) << std::endl;
+			}
+			break;
+		}
+		
 	}
 
 	void draw()
