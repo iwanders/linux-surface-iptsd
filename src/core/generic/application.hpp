@@ -173,6 +173,11 @@ protected:
 	 */
 	virtual void on_stylus(const ipts::StylusData & /* unused */) {};
 
+	/*!
+	 * For running application specific code that futher processes dft inputs.
+	 */
+	virtual void on_dft(const ipts::DftWindow & /* unused */) {};
+
 private:
 	/*!
 	 * Runs contact detection on an IPTS heatmap.
@@ -255,6 +260,9 @@ private:
 	{
 		m_dft.input(data);
 		this->process_stylus(m_dft.get_stylus());
+
+		// Hand off the dft data to handler code.
+		this->on_dft(data);
 	}
 
 	/*!
