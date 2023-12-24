@@ -115,7 +115,7 @@ public:
 
 		// convert the amplitudes into something we can fit a parabola to
 		for (u8 i = 0; i < 3; i++)
-			x.at(i) = std::pow(x.at(i), config.dft_position_exp);
+			x.at(i) = std::pow(std::abs(x.at(i)), config.dft_position_exp);
 
 		//  for (u8 i = 0; i < 3; i++)
 			//  std::cout << "x.at(: " << (int)i << "): " << x.at(i) <<  std::endl;
