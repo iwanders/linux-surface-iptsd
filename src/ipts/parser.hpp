@@ -16,11 +16,25 @@
 #include <bitset>
 #include <cstddef>
 #include <functional>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <memory>
 #include <optional>
 #include <vector>
 
 namespace iptsd::ipts {
+
+inline std::string hexdump(const void* input, std::size_t length)
+{
+	const auto d = reinterpret_cast<const u8*>(input);
+	std::stringstream ss;
+	for (std::size_t i = 0; i < length; i++)
+	{
+		ss << "" << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(d[i])<< " ";
+	}
+	return ss.str();
+}
 
 class Parser {
 public:
@@ -35,6 +49,9 @@ public:
 
 	// The callback that is invoked when a metadata report was parsed.
 	std::function<void(const Metadata &)> on_metadata;
+
+	// The callback that is invoked when a pen magnitude report was parsed.
+	std::function<void(const struct ipts_pen_magnitude &)> on_pen_magnitude;
 
 private:
 	struct ipts_dimensions m_dim {};
@@ -234,8 +251,16 @@ private:
 			case IPTS_REPORT_TYPE_PEN_DFT_WINDOW:
 				this->parse_dft_window(sub);
 				break;
+			case IPTS_REPORT_TYPE_PEN_MAGNITUDE:
+				this->parse_pen_magnitude(sub);
+				break;
 			default:
-				// TODO: Add handler for unknow data and wire up debug tools
+				// TODO: Add handler for unknown data and wire up debug tools
+				if (false) {
+					std::cout << "Found report.type: " << static_cast<int>(report.type) << std::endl;
+					const auto rem = sub.subspan(sub.size());
+					std::cout << "  " << hexdump(rem.data(), rem.size()) << std::endl;
+				}
 				break;
 			}
 		}
@@ -433,6 +458,16 @@ private:
 			return;
 
 		this->on_dft(dft);
+	}
+
+
+	void parse_pen_magnitude(Reader &reader)
+	{
+		const auto msg = reader.read<struct ipts_pen_magnitude>();
+		if (!this->on_pen_magnitude)
+			return;
+
+		this->on_pen_magnitude(msg);
 	}
 };
 

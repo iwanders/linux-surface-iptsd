@@ -177,6 +177,23 @@ struct [[gnu::packed]] ipts_pen_dft_window_row {
 	i8 zero;
 };
 
+constexpr u8 IPTS_PEN_MAGNITUDE_ENTRIES_X = 68; 
+constexpr u8 IPTS_PEN_MAGNITUDE_ENTRIES_Y = 46; 
+struct [[gnu::packed]] ipts_pen_magnitude {
+	// Speculated
+	u8 x_lower;
+	u8 y_lower;
+	u8 x_upper;
+	u8 y_upper;
+	// 
+	u8 unknown_0;
+	u8 unknown_1;
+	u8 unknown_2;
+	u8 unknown_3;
+	u32 data_x[IPTS_PEN_MAGNITUDE_ENTRIES_X];
+	u32 data_y[IPTS_PEN_MAGNITUDE_ENTRIES_Y];
+};
+
 struct [[gnu::packed]] ipts_touch_metadata_size {
 	u32 rows;
 	u32 columns;

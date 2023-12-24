@@ -129,6 +129,7 @@ public:
 		m_parser.on_heatmap = [&](const auto &data) { this->process_heatmap(data); };
 		m_parser.on_stylus = [&](const auto &data) { this->process_stylus(data); };
 		m_parser.on_dft = [&](const auto &data) { this->process_dft(data); };
+		m_parser.on_pen_magnitude = [&](const auto &data) { this->process_pen_magnitude(data); };
 	};
 
 	virtual ~Application() = default;
@@ -177,6 +178,11 @@ protected:
 	 * For running application specific code that futher processes dft inputs.
 	 */
 	virtual void on_dft(const ipts::DftWindow & /* unused */) {};
+
+	/*!
+	 * For running application specific code that futher processes dft inputs.
+	 */
+	virtual void on_pen_magnitude(const struct ipts_pen_magnitude & /* unused */) {};
 
 private:
 	/*!
@@ -259,10 +265,41 @@ private:
 	void process_dft(const ipts::DftWindow &data)
 	{
 		m_dft.input(data);
-		this->process_stylus(m_dft.get_stylus());
+		//  this->process_stylus(m_dft.get_stylus());
 
 		// Hand off the dft data to handler code.
 		this->on_dft(data);
+	}
+
+	/*!
+	 * Handles incoming pen magnitude data.
+	 */
+	void process_pen_magnitude(const struct ipts_pen_magnitude &msg)
+	{
+		// Hand off the dft data to handler code.
+		this->on_pen_magnitude(msg);
+
+		ipts::StylusData m_stylus = m_dft.get_stylus();
+		const auto find_peak = [](const auto& d, const u32 size) {
+			std::vector<f32> scaled;
+			f32 sum = 0;
+			for (std::size_t i = 0; i < size; i++) {
+				sum += static_cast<f32>(d[i]);
+			}
+			for (std::size_t i = 0; i < size; i++) {
+				scaled.push_back(static_cast<f32>(d[i]) / sum);
+			}
+			sum = 0.0;
+			for (std::size_t i = 0; i < size; i++) {
+				sum += static_cast<f32>(i) * scaled[i];
+			}
+			return sum;
+		};
+		const auto x_peak = find_peak(msg.data_x, IPTS_PEN_MAGNITUDE_ENTRIES_X);
+		const auto y_peak = find_peak(msg.data_y, IPTS_PEN_MAGNITUDE_ENTRIES_Y);
+		m_stylus.x = x_peak / static_cast<f32>(IPTS_PEN_MAGNITUDE_ENTRIES_X);
+		m_stylus.y = y_peak / static_cast<f32>(IPTS_PEN_MAGNITUDE_ENTRIES_Y);
+		this->process_stylus(m_stylus);
 	}
 
 	/*!
