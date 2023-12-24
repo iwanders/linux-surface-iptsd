@@ -166,6 +166,15 @@ if tools.contains('plot')
   endif
 endif
 
+
+executable('iptsd-test-dft', 'core/generic/test_dft.cpp',
+           install: false,
+           cpp_args: optflags,
+           dependencies: default_deps,
+           include_directories: includes,
+)
+
+
 if tools.contains('show')
   sdl_options = [
     'test=false',

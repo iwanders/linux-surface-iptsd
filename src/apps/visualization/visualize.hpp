@@ -82,7 +82,7 @@ public:
 
 		m_history.push_back(data);
 
-		if (m_history.size() < 50)
+		if (m_history.size() < 500)
 			return;
 
 		m_history.pop_front();
@@ -402,9 +402,9 @@ public:
 				continue;
 
 			if (!from.contact || !to.contact)
-				m_cairo->set_source_rgba(0.5, 0, 1.0, 0.5);
+				m_cairo->set_source_rgba(1.0, 1.0, 0.0, 1.0);
 			else
-				m_cairo->set_source_rgba(0.5, 0, 1.0, 1.0);
+				m_cairo->set_source_rgba(1.0, 0, 1.0, 1.0);
 
 			const f64 fx = from.x * (m_size.x() - 1);
 			const f64 fy = from.y * (m_size.y() - 1);

@@ -12,6 +12,7 @@
 #include <cmath>
 #include <optional>
 #include <utility>
+#include <iostream>
 
 namespace iptsd::core {
 
@@ -64,6 +65,73 @@ public:
 		return m_stylus;
 	}
 
+
+	/*!
+	 * Interpolates the current stylus position from a list of antenna measurements.
+	 *
+	 * @param[in] row A list of measurements on one axis.
+	 * @return The position of the stylus on that axis.
+	 */
+	[[nodiscard]] static f64 interpolate_position(const struct ipts_pen_dft_window_row &row, const Config& config)
+	{
+		// assume the center component has the max amplitude
+		u8 maxi = IPTS_DFT_NUM_COMPONENTS / 2;
+
+		// off-screen components are always zero, don't use them
+		f64 mind = -0.5;
+		f64 maxd = 0.5;
+
+		if (gsl::at(row.real, maxi - 1) == 0 && gsl::at(row.imag, maxi - 1) == 0) {
+			maxi++;
+			mind = -1;
+		} else if (gsl::at(row.real, maxi + 1) == 0 && gsl::at(row.imag, maxi + 1) == 0) {
+			maxi--;
+			maxd = 1;
+		}
+
+		// get phase-aligned amplitudes of the three center components
+		const f64 amp = std::hypot(gsl::at(row.real, maxi), gsl::at(row.imag, maxi));
+		//  std::cout << "amp : " << amp <<  std::endl;
+		//  std::cout << "maxi : " << (int)maxi <<  std::endl;
+		//  std::cout << "maxd : " << maxd <<  std::endl;
+
+		if (amp < casts::to<f64>(config.dft_position_min_amp))
+			return casts::to<f64>(NAN);
+
+		const f64 sin = gsl::at(row.real, maxi) / amp;
+		const f64 cos = gsl::at(row.imag, maxi) / amp;
+		//  std::cout << "sin : " << sin <<  std::endl;
+		//  std::cout << "cos : " << cos <<  std::endl;
+
+
+		std::array<f64, 3> x = {
+			sin * gsl::at(row.real, maxi - 1) + cos * gsl::at(row.imag, maxi - 1),
+			amp,
+			sin * gsl::at(row.real, maxi + 1) + cos * gsl::at(row.imag, maxi + 1),
+		};
+		//  std::cout << "x[0] : " << x[0] <<  std::endl;
+		//  std::cout << "x[1] : " << x[1] <<  std::endl;
+		//  std::cout << "x[2] : " << x[2] <<  std::endl;
+
+		// convert the amplitudes into something we can fit a parabola to
+		for (u8 i = 0; i < 3; i++)
+			x.at(i) = std::pow(x.at(i), config.dft_position_exp);
+
+		//  for (u8 i = 0; i < 3; i++)
+			//  std::cout << "x.at(: " << (int)i << "): " << x.at(i) <<  std::endl;
+			
+		// check orientation of fitted parabola
+		//  std::cout << "orient : " << (x[0] + x[2] <= 2 * x[1]) <<  std::endl;
+		if (x[0] + x[2] <= 2 * x[1])
+			return casts::to<f64>(NAN);
+
+		// find critical point of fitted parabola
+		const f64 d = (x[0] - x[2]) / (2 * (x[0] - 2 * x[1] + x[2]));
+		//  std::cout << "d : " << d <<  std::endl;
+
+		return row.first + maxi + std::clamp(d, mind, maxd);
+	}
+
 private:
 	/*!
 	 * Calculates the stylus position from a DFT window.
@@ -96,10 +164,11 @@ private:
 		m_imag = dft.x[0].imag[IPTS_DFT_NUM_COMPONENTS / 2] +
 			 dft.y[0].imag[IPTS_DFT_NUM_COMPONENTS / 2];
 
-		f64 x = this->interpolate_position(dft.x[0]);
-		f64 y = this->interpolate_position(dft.y[0]);
+		f64 x = interpolate_position(dft.x[0], m_config);
+		f64 y = interpolate_position(dft.y[0], m_config);
 
 		if (std::isnan(x) || std::isnan(y)) {
+			std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
 			this->lift();
 			return;
 		}
@@ -118,8 +187,8 @@ private:
 		if (dft.x[1].magnitude > m_config.dft_tilt_min_mag &&
 		    dft.y[1].magnitude > m_config.dft_tilt_min_mag) {
 			// calculate tilt angle from relative position of secondary transmitter
-			f64 xt = this->interpolate_position(dft.x[1]);
-			f64 yt = this->interpolate_position(dft.y[1]);
+			f64 xt = interpolate_position(dft.x[1], m_config);
+			f64 yt = interpolate_position(dft.y[1], m_config);
 
 			if (!std::isnan(xt) && !std::isnan(yt)) {
 				xt /= width - 1;
@@ -221,57 +290,6 @@ private:
 			m_stylus.contact = false;
 			m_stylus.pressure = 0;
 		}
-	}
-
-	/*!
-	 * Interpolates the current stylus position from a list of antenna measurements.
-	 *
-	 * @param[in] row A list of measurements on one axis.
-	 * @return The position of the stylus on that axis.
-	 */
-	[[nodiscard]] f64 interpolate_position(const struct ipts_pen_dft_window_row &row) const
-	{
-		// assume the center component has the max amplitude
-		u8 maxi = IPTS_DFT_NUM_COMPONENTS / 2;
-
-		// off-screen components are always zero, don't use them
-		f64 mind = -0.5;
-		f64 maxd = 0.5;
-
-		if (gsl::at(row.real, maxi - 1) == 0 && gsl::at(row.imag, maxi - 1) == 0) {
-			maxi++;
-			mind = -1;
-		} else if (gsl::at(row.real, maxi + 1) == 0 && gsl::at(row.imag, maxi + 1) == 0) {
-			maxi--;
-			maxd = 1;
-		}
-
-		// get phase-aligned amplitudes of the three center components
-		const f64 amp = std::hypot(gsl::at(row.real, maxi), gsl::at(row.imag, maxi));
-		if (amp < casts::to<f64>(m_config.dft_position_min_amp))
-			return casts::to<f64>(NAN);
-
-		const f64 sin = gsl::at(row.real, maxi) / amp;
-		const f64 cos = gsl::at(row.imag, maxi) / amp;
-
-		std::array<f64, 3> x = {
-			sin * gsl::at(row.real, maxi - 1) + cos * gsl::at(row.imag, maxi - 1),
-			amp,
-			sin * gsl::at(row.real, maxi + 1) + cos * gsl::at(row.imag, maxi + 1),
-		};
-
-		// convert the amplitudes into something we can fit a parabola to
-		for (u8 i = 0; i < 3; i++)
-			x.at(i) = std::pow(x.at(i), m_config.dft_position_exp);
-
-		// check orientation of fitted parabola
-		if (x[0] + x[2] <= 2 * x[1])
-			return casts::to<f64>(NAN);
-
-		// find critical point of fitted parabola
-		const f64 d = (x[0] - x[2]) / (2 * (x[0] - 2 * x[1] + x[2]));
-
-		return row.first + maxi + std::clamp(d, mind, maxd);
 	}
 
 	[[nodiscard]] f64 interpolate_frequency(const ipts::DftWindow &dft, const u8 rows) const
