@@ -40,7 +40,7 @@ public:
 	void input(const ipts::DftWindow &dft)
 	{
 		switch (dft.type) {
-		case IPTS_DFT_ID_POSITION:
+		case IPTS_DFT_ID_POSITION2:
 			this->handle_position(dft);
 			break;
 		case IPTS_DFT_ID_BUTTON:

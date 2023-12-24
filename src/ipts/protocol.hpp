@@ -65,6 +65,7 @@ constexpr u8 IPTS_DFT_MAX_ROWS       = 16;
 constexpr u8 IPTS_DFT_PRESSURE_ROWS  = 6;
 
 constexpr u8 IPTS_DFT_ID_POSITION = 6;
+constexpr u8 IPTS_DFT_ID_POSITION2 = 7;
 constexpr u8 IPTS_DFT_ID_BUTTON   = 9;
 constexpr u8 IPTS_DFT_ID_PRESSURE = 11;
 
