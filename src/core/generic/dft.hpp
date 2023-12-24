@@ -162,18 +162,39 @@ private:
 		bool button = false;
 		bool rubber = false;
 
-		if (dft.x[0].magnitude > m_config.dft_button_min_mag &&
-		    dft.y[0].magnitude > m_config.dft_button_min_mag) {
-			const i32 real = dft.x[0].real[IPTS_DFT_NUM_COMPONENTS / 2] +
-					 dft.y[0].real[IPTS_DFT_NUM_COMPONENTS / 2];
-			const i32 imag = dft.x[0].imag[IPTS_DFT_NUM_COMPONENTS / 2] +
-					 dft.y[0].imag[IPTS_DFT_NUM_COMPONENTS / 2];
+		std::size_t bin = 0;
+
+		// If using fsk, find the bin with the highest amplitude.
+		if (m_config.dft_button_uses_fsk) {
+			u64 best_magnitude = 0;
+			for (std::size_t b = 0; b < dft.rows; b++) {
+				const auto row_mag = dft.x[b].magnitude + dft.y[b].magnitude;
+				if (best_magnitude < row_mag) {
+					bin = b;
+					best_magnitude = row_mag;
+				}
+			}
+		}
+
+		if (dft.x[bin].magnitude > m_config.dft_button_min_mag &&
+		    dft.y[bin].magnitude > m_config.dft_button_min_mag) {
+			const i32 real = dft.x[bin].real[IPTS_DFT_NUM_COMPONENTS / 2] +
+					 dft.y[bin].real[IPTS_DFT_NUM_COMPONENTS / 2];
+			const i32 imag = dft.x[bin].imag[IPTS_DFT_NUM_COMPONENTS / 2] +
+					 dft.y[bin].imag[IPTS_DFT_NUM_COMPONENTS / 2];
 
 			// same phase as position signal = eraser, opposite phase = button
 			const i32 val = m_real * real + m_imag * imag;
 
-			button = val < 0;
-			rubber = val > 0;
+			// If fsk is used, verify the detection is in the appropriate bin.
+			if (m_config.dft_button_uses_fsk) {
+				const bool in_button_bin = bin < m_config.dft_button_bin_max;
+				button = val < 0 && in_button_bin;
+				rubber = val > 0 && in_button_bin;
+			} else {
+				button = val < 0;
+				rubber = val > 0;
+			}
 		}
 
 		m_stylus.button = button;

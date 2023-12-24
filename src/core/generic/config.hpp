@@ -53,6 +53,8 @@ public:
 	usize dft_position_min_mag = 2000;
 	f64 dft_position_exp = -0.7;
 	usize dft_button_min_mag = 1000;
+	bool dft_button_uses_fsk = false;
+	usize dft_button_bin_max = 1;
 	usize dft_freq_min_mag = 10000;
 	usize dft_tilt_min_mag = 10000;
 	f64 dft_tilt_distance = 0.6;

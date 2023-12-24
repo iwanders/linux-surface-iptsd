@@ -169,6 +169,8 @@ private:
 		this->get(ini, "DFT", "PositionMinMag", m_config.dft_position_min_mag);
 		this->get(ini, "DFT", "PositionExp", m_config.dft_position_exp);
 		this->get(ini, "DFT", "ButtonMinMag", m_config.dft_button_min_mag);
+		this->get(ini, "DFT", "ButtonUsesFSK", m_config.dft_button_uses_fsk);
+		this->get(ini, "DFT", "ButtonBinMax", m_config.dft_button_bin_max);
 		this->get(ini, "DFT", "FreqMinMag", m_config.dft_freq_min_mag);
 		this->get(ini, "DFT", "TiltMinMag", m_config.dft_tilt_min_mag);
 		this->get(ini, "DFT", "TiltDistance", m_config.dft_tilt_distance);
