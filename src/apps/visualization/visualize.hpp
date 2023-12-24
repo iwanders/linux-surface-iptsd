@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <deque>
+#include <iomanip>
 #include <limits>
 #include <optional>
 #include <string>
@@ -124,11 +125,7 @@ public:
 		if (m_history.empty()) {
 			return;
 		}
-		if (m_history.back().button) {
-			std::cout << "BUTTON" << std::endl;
-			std::cout << "BUTTON" << std::endl;
-			std::cout << "BUTTON" << std::endl;
-		}
+
 		const auto ipts_dimensions_str = [](const ipts_dimensions& dim) {
 			std::stringstream ss;
 			ss << "height: " << static_cast<int>(dim.height) << std::endl;
@@ -144,16 +141,15 @@ public:
 		std::ignore = ipts_dimensions_str;
 		const auto ipts_pen_dft_window_row_str = [](const ipts_pen_dft_window_row& row) {
 			std::stringstream ss;
-			ss << "frequency: " << row.frequency << " ";
-			ss << "magnitude: " << row.magnitude << " ";
-			ss << "magnitude: " << row.magnitude << " ";
-			ss << "first: " << static_cast<int>(row.first) << " ";
+			ss << "frequency: " << std::setw(9) << row.frequency << " ";
+			ss << "magnitude: " << std::setw(6)  << row.magnitude << " ";
+			ss << "first: "  << std::setw(3) << static_cast<int>(row.first) << " ";
 			ss << "last: " << static_cast<int>(row.last) << " ";
 			ss << "mid: " << static_cast<int>(row.mid) << " ";
 			ss << "zero: " << static_cast<int>(row.zero) << " [";
 			for (std::size_t i = 0; i < IPTS_DFT_NUM_COMPONENTS; i++)
 			{
-				ss << row.real[i] << "," << row.imag[i] << " ";
+				ss << "(" << std::setw(6) << row.real[i] << "," <<   std::setw(6) << row.imag[i] << ") ";
 			}
 			ss << "]";
 			return ss.str();
@@ -166,7 +162,7 @@ public:
 			//  std::cout << ipts_dimensions_str(data.dim);
 			break;
 		case IPTS_DFT_ID_BUTTON:
-			std::cout << "IPTS_DFT_ID_BUTTON" << std::endl;
+			std::cout << "IPTS_DFT_ID_BUTTON" << (m_history.back().button ? "BUTTON" : "") << std::endl;
 			//  std::cout << ipts_dimensions_str(data.dim);
 			for (std::size_t i = 0; i < data.rows; i++)
 			{
@@ -182,6 +178,7 @@ public:
 			break;
 		default:
 			// Ignored
+			return;
 			std::cout << "Type is " << static_cast<int>(data.type) << std::endl;
 			for (std::size_t i = 0; i < data.rows; i++)
 			{
