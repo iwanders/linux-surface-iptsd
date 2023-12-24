@@ -140,6 +140,15 @@ if tools.contains('perf')
   )
 endif
 
+if tools.contains('print')
+  executable('iptsd-print', 'apps/print/main.cpp',
+             install: true,
+             cpp_args: optflags,
+             dependencies: default_deps,
+             include_directories: includes,
+  )
+endif
+
 if tools.contains('plot') or tools.contains('show')
   cairo = dependency('cairomm-1.0', required: false)
 endif
