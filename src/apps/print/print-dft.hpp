@@ -115,67 +115,6 @@ public:
 			break;
 		}
 	}
-
-	void on_pen_magnitude(const struct ipts_pen_magnitude &msg) override {
-		if (true) {
-			std::cout << "x_lower: " << static_cast<u32>(msg.x_lower) << "\n";
-			std::cout << "y_lower: " << static_cast<u32>(msg.y_lower) << "\n";
-			std::cout << "x_upper: " << static_cast<u32>(msg.x_upper) << "\n";
-			std::cout << "y_upper: " << static_cast<u32>(msg.y_upper) << "\n";
-
-			std::cout << "unknown_0: " << static_cast<u32>(msg.unknown_0) << "\n";
-			std::cout << "unknown_1: " << static_cast<u32>(msg.unknown_1) << "\n";
-			std::cout << "unknown_2: " << static_cast<u32>(msg.unknown_2) << "\n";
-			std::cout << "unknown_3: " << static_cast<u32>(msg.unknown_3) << "\n";
-
-			for (std::size_t i = 0 ; i < IPTS_PEN_MAGNITUDE_ENTRIES_X; i++ ){
-				std::cout << "" << std::setw(6) << msg.data_x[i] << " ";
-			}
-			std::cout << std::endl;
-			for (std::size_t i = 0 ; i < IPTS_PEN_MAGNITUDE_ENTRIES_Y; i++ ){
-				std::cout << "" << std::setw(6) << msg.data_y[i] << " ";
-			}
-			std::cout << std::endl;
-		}
-		// Do some smarts to find the peak... >_<
-		/*
-			x = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 65, 1937, 311981, 22613, 338, 10, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-			y = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 4, 130, 7018, 478948, 9469, 85, 13, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-			# Normalize the data
-			def find_peak(a):
-			    maxval = max(a)
-			    sumval = sum(a)
-			    x = [xi / sumval for xi in a]
-			    total = 0.0
-			    for (i, w) in enumerate(x):
-				total += float(i) * w
-			    print(total)
-
-			find_peak(x)
-			find_peak(y)
-		*/
-		const auto find_peak = [](const auto& d, const u32 size) {
-			std::vector<f32> scaled;
-			f32 sum = 0;
-			for (std::size_t i = 0; i < size; i++) {
-				sum += static_cast<f32>(d[i]);
-			}
-			for (std::size_t i = 0; i < size; i++) {
-				scaled.push_back(static_cast<f32>(d[i]) / sum);
-			}
-			sum = 0.0;
-			for (std::size_t i = 0; i < size; i++) {
-				sum += static_cast<f32>(i) * scaled[i];
-			}
-			return sum;
-		};
-		const auto x_peak = find_peak(msg.data_x, IPTS_PEN_MAGNITUDE_ENTRIES_X);
-		const auto y_peak = find_peak(msg.data_y, IPTS_PEN_MAGNITUDE_ENTRIES_Y);
-		std::cout << "x: " << std::setw(6) << x_peak << " " << std::endl;
-		std::cout << "y: " << std::setw(6) << y_peak << " " << std::endl;
-		
-	}
 };
 
 } // namespace iptsd::apps::print
