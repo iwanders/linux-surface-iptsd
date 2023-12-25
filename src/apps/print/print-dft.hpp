@@ -112,6 +112,37 @@ static std::string json_dft_window(const ipts::DftWindow &data)
 	return ss.str();
 }
 
+static std::string json_metadata(const ipts::Metadata &data)
+{
+	std::stringstream ss;
+	ss << "{";
+
+	std::stringstream ss_size;
+	ss_size << "{";
+	ss_size << Entry("rows", data.size.rows);
+	ss_size << Entry("columns", data.size.columns);
+	ss_size << Entry("width", data.size.width);
+	ss_size << Entry("height", data.size.height, false);
+	ss_size << "}";
+
+	ss << Entry("size", ss_size.str() + "\n");
+
+	std::stringstream ss_transform;
+	ss_transform << "{";
+	ss_transform << Entry("xx", data.transform.xx);
+	ss_transform << Entry("yx", data.transform.yx);
+	ss_transform << Entry("tx", data.transform.tx);
+	ss_transform << Entry("xy", data.transform.xy);
+	ss_transform << Entry("yy", data.transform.yy);
+	ss_transform << Entry("ty", data.transform.ty, false);
+	ss_transform << "}";
+
+	ss << Entry("transform", ss_transform.str() + "\n", false);
+	ss << "}";
+
+	return ss.str();
+}
+
 static std::string json_entry(const std::string &type, const std::string& payload) {
 	std::stringstream ss;
 	ss << "{";
@@ -150,6 +181,9 @@ public:
 	void on_stop() override
 	{
 		if (is_logging_json()) {
+			if (m_metadata.has_value()) {
+				append_json(json_entry("metadata", json_metadata(m_metadata.value())));
+			}
 			// dump the file.
 			const auto path = std::filesystem::path{m_config.output_json};
 			std::filesystem::create_directories(path.parent_path());
