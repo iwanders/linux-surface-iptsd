@@ -17,8 +17,15 @@
 #include <filesystem>
 #include <optional>
 #include <utility>
+#include <limits>
 
 namespace iptsd::apps::visualization {
+
+struct PlotConfig {
+	usize start_index{0};
+	usize plot_nth{1};
+	usize end_index{std::numeric_limits<usize>::max()};
+};
 
 class VisualizePNG : public Visualize {
 private:
@@ -27,6 +34,7 @@ private:
 
 	usize m_counter = 0;
 
+	PlotConfig m_plot_config;
 public:
 	VisualizePNG(const core::Config &config,
 		     const core::DeviceInfo &info,
@@ -34,6 +42,10 @@ public:
 		     std::filesystem::path output)
 		: Visualize(config, info, metadata)
 		, m_output {std::move(output)} {};
+
+	void set_config(const PlotConfig& config) {
+		m_plot_config = config;
+	}
 
 	void on_start() override
 	{
@@ -59,10 +71,14 @@ public:
 	{
 		Visualize::on_data(data);
 
-		this->draw();
+		if ((m_counter >= m_plot_config.start_index) && (m_counter < m_plot_config.end_index) &&
+			((m_counter - m_plot_config.start_index) % m_plot_config.plot_nth == 0)) {
+			this->draw();
 
-		// Save the texture to a png file
-		m_tex->write_to_png(m_output / fmt::format("{:05}.png", m_counter++));
+			// Save the texture to a png file
+			m_tex->write_to_png(m_output / fmt::format("{:05}.png", m_counter));
+		}
+		m_counter++;
 	}
 };
 

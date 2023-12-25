@@ -406,6 +406,7 @@ public:
 			else
 				m_cairo->set_source_rgba(1.0, 0, 1.0, 1.0);
 
+			
 			const f64 fx = from.x * (m_size.x() - 1);
 			const f64 fy = from.y * (m_size.y() - 1);
 
@@ -416,6 +417,22 @@ public:
 
 			m_cairo->line_to(tx, ty);
 			m_cairo->stroke();
+
+			// Draw ring position.
+			{
+				m_cairo->set_source_rgba(0.0, 1.0, 1.0, 1.0);
+				const f64 fx = from.x_ring * (m_size.x() - 1);
+				const f64 fy = from.y_ring * (m_size.y() - 1);
+
+				m_cairo->move_to(fx, fy);
+
+				const f64 tx = to.x_ring * (m_size.x() - 1);
+				const f64 ty = to.y_ring * (m_size.y() - 1);
+
+				m_cairo->line_to(tx, ty);
+				m_cairo->stroke();
+			}
+
 		}
 	}
 };

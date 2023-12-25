@@ -36,10 +36,25 @@ int run(const int argc, const char **argv)
 		->type_name("DIR")
 		->required();
 
+
+	iptsd::apps::visualization::PlotConfig config;
+
+	app.add_option("--start-index", config.start_index)
+		->description("Only plot frames after this index.")
+		->default_val(config.start_index);
+	app.add_option("--end-index", config.end_index)
+		->description("Only plot frames before this index.")
+		->default_val(config.end_index);
+	app.add_option("--plot-nth", config.plot_nth)
+		->description("Only plot frames that are a multiple of this")
+		->default_val(config.plot_nth);
+
+
 	CLI11_PARSE(app, argc, argv);
 
 	// Create a plotting application that reads from a file.
 	core::linux::FileRunner<VisualizePNG> visualize {path, output};
+	visualize.application().set_config(config);
 
 	const auto _sigterm = core::linux::signal<SIGTERM>([&](int) { visualize.stop(); });
 	const auto _sigint = core::linux::signal<SIGINT>([&](int) { visualize.stop(); });
