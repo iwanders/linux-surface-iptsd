@@ -40,8 +40,11 @@ public:
 	void input(const ipts::DftWindow &dft)
 	{
 		switch (dft.type) {
+		case IPTS_DFT_ID_POSITION:
+			this->handle_position(dft, false);
+			break;
 		case IPTS_DFT_ID_POSITION2:
-			this->handle_position(dft);
+			this->handle_position(dft, true);
 			break;
 		case IPTS_DFT_ID_BUTTON:
 			this->handle_button(dft);
@@ -138,16 +141,20 @@ private:
 	 *
 	 * @param[in] dft The DFT window (with type == IPTS_DFT_ID_POSITION)
 	 */
-	void handle_position(const ipts::DftWindow &dft)
+	void handle_position(const ipts::DftWindow &dft, const bool is_ring)
 	{
 		if (dft.rows <= 1) {
-			this->lift();
+			if (!is_ring) {
+				this->lift();
+			}
 			return;
 		}
 
 		if (dft.x[0].magnitude <= m_config.dft_position_min_mag ||
 		    dft.y[0].magnitude <= m_config.dft_position_min_mag) {
-			this->lift();
+			if (!is_ring) {
+				this->lift();
+			}
 			return;
 		}
 
@@ -169,7 +176,9 @@ private:
 
 		if (std::isnan(x) || std::isnan(y)) {
 			std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
-			this->lift();
+			if (!is_ring) {
+				this->lift();
+			}
 			return;
 		}
 
@@ -214,8 +223,14 @@ private:
 			}
 		}
 
-		m_stylus.x = std::clamp(x, 0.0, 1.0);
-		m_stylus.y = std::clamp(y, 0.0, 1.0);
+
+		if (!is_ring) {
+			m_stylus.x = std::clamp(x, 0.0, 1.0);
+			m_stylus.y = std::clamp(y, 0.0, 1.0);
+		} else {
+			m_stylus.x_ring = std::clamp(x, 0.0, 1.0);
+			m_stylus.y_ring = std::clamp(y, 0.0, 1.0);
+		}
 	}
 
 	/*!
