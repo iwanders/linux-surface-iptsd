@@ -46,8 +46,8 @@ public:
 		case IPTS_DFT_ID_POSITION2:
 			this->handle_position(dft, true);
 			{
-				std::cout << "p0: " << m_stylus.x << ", " << m_stylus.y << std::endl;
-				std::cout << "pring: " << m_stylus.x_ring << ", " << m_stylus.y_ring << std::endl;
+				//  std::cout << "p0: " << m_stylus.x << ", " << m_stylus.y << std::endl;
+				//  std::cout << "pring: " << m_stylus.x_ring << ", " << m_stylus.y_ring << std::endl;
 			}
 			break;
 		case IPTS_DFT_ID_BUTTON:
@@ -179,7 +179,7 @@ private:
 		f64 y = interpolate_position(dft.y[0], m_config);
 
 		if (std::isnan(x) || std::isnan(y)) {
-			std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
+			//  std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
 			if (!is_ring) {
 				this->lift();
 			}
