@@ -162,14 +162,14 @@ public:
 			//  std::cout << ipts_dimensions_str(data.dim);
 			break;
 		case IPTS_DFT_ID_BUTTON:
-			std::cout << "IPTS_DFT_ID_BUTTON" << (m_history.back().button ? "BUTTON" : "") << std::endl;
+			//  std::cout << "IPTS_DFT_ID_BUTTON" << (m_history.back().button ? "BUTTON" : "") << std::endl;
 			//  std::cout << ipts_dimensions_str(data.dim);
 			for (std::size_t i = 0; i < data.rows; i++)
 			{
-				std::cout << "x[i " << i << "]: ";
-				std::cout << ipts_pen_dft_window_row_str(data.x[i]) << std::endl;
-				std::cout << "y[i " << i << "]: ";
-				std::cout << ipts_pen_dft_window_row_str(data.y[i]) << std::endl;
+				//  std::cout << "x[i " << i << "]: ";
+				//  std::cout << ipts_pen_dft_window_row_str(data.x[i]) << std::endl;
+				//  std::cout << "y[i " << i << "]: ";
+				//  std::cout << ipts_pen_dft_window_row_str(data.y[i]) << std::endl;
 			}
 			break;
 		case IPTS_DFT_ID_PRESSURE:
