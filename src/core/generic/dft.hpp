@@ -45,6 +45,10 @@ public:
 			break;
 		case IPTS_DFT_ID_POSITION2:
 			this->handle_position(dft, true);
+			{
+				std::cout << "p0: " << m_stylus.x << ", " << m_stylus.y << std::endl;
+				std::cout << "pring: " << m_stylus.x_ring << ", " << m_stylus.y_ring << std::endl;
+			}
 			break;
 		case IPTS_DFT_ID_BUTTON:
 			this->handle_button(dft);
@@ -199,6 +203,7 @@ private:
 			f64 xt = interpolate_position(dft.x[1], m_config);
 			f64 yt = interpolate_position(dft.y[1], m_config);
 
+
 			if (!std::isnan(xt) && !std::isnan(yt)) {
 				xt /= width - 1;
 				yt /= height - 1;
@@ -208,6 +213,11 @@ private:
 
 				if (m_config.invert_y)
 					yt = 1 - yt;
+
+				if (!is_ring) {
+					m_stylus.x_t = xt;
+					m_stylus.y_t = yt;
+				}
 
 				xt -= x;
 				yt -= y;

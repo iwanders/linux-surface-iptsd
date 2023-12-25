@@ -432,6 +432,20 @@ public:
 				m_cairo->line_to(tx, ty);
 				m_cairo->stroke();
 			}
+			// Draw tip position.
+			{
+				m_cairo->set_source_rgba(1.0, 0.0, 0.0, 1.0);
+				const f64 fx = from.x_t * (m_size.x() - 1);
+				const f64 fy = from.y_t * (m_size.y() - 1);
+
+				m_cairo->move_to(fx, fy);
+
+				const f64 tx = to.x_t * (m_size.x() - 1);
+				const f64 ty = to.y_t * (m_size.y() - 1);
+
+				m_cairo->line_to(tx, ty);
+				m_cairo->stroke();
+			}
 
 		}
 	}

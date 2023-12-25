@@ -25,6 +25,9 @@ struct StylusData {
 	f64 azimuth = 0;
 	u32 serial = 0;
 
+	f64 x_t = 0;
+	f64 y_t = 0;
+
 	f64 x_ring = 0;
 	f64 y_ring = 0;
 };
