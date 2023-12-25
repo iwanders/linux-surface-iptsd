@@ -54,11 +54,16 @@ int run(const int argc, const char **argv)
 		->description("Print IPTS_DFT_ID_BUTTON type dft windows.");
 	app.add_flag("--dft-position", config.dft_id_position)
 		->description("Print IPTS_DFT_ID_POSITION type dft windows.");
+	app.add_flag("--dft-position2", config.dft_id_position2)
+		->description("Print IPTS_DFT_ID_POSITION2 type dft windows.");
 	app.add_flag("--dft-pressure", config.dft_id_pressure)
 		->description("Print IPTS_DFT_ID_PRESSURE type dft windows.");
 	app.add_flag("--dft-unknown", config.dft_id_unknown)
 		->description("Print unknown type dft windows, use for example with "
 			      "'... --dft-unknown | grep -A 20 IPTS_DFT_ID_8");
+
+	app.add_option("--output-json", config.output_json)
+		->description("Dump collected to a json file at the end.");
 
 	CLI11_PARSE(app, argc, argv);
 
