@@ -81,6 +81,9 @@ public:
 	 */
 	[[nodiscard]] static f64 interpolate_position(const struct ipts_pen_dft_window_row &row, const Config& config)
 	{
+		//  static int counter = 0;
+		//  counter++;
+		//  std::cout << "counter: " << counter << std::endl;
 		// assume the center component has the max amplitude
 		u8 maxi = IPTS_DFT_NUM_COMPONENTS / 2;
 
@@ -135,6 +138,7 @@ public:
 		// find critical point of fitted parabola
 		const f64 d = (x[0] - x[2]) / (2 * (x[0] - 2 * x[1] + x[2]));
 		//  std::cout << "d : " << d <<  std::endl;
+		//  std::cout << "row.first : " << static_cast<u32>(row.first) <<  std::endl;
 
 		return row.first + maxi + std::clamp(d, mind, maxd);
 	}
@@ -175,11 +179,14 @@ private:
 		m_imag = dft.x[0].imag[IPTS_DFT_NUM_COMPONENTS / 2] +
 			 dft.y[0].imag[IPTS_DFT_NUM_COMPONENTS / 2];
 
-		std::cout << "x: \n" << std::endl;
+		//  std::cout << "x: \n" << std::endl;
 		f64 x = interpolate_position(dft.x[0], m_config);
-		std::cout << "y: \n" << std::endl;
+		//  std::cout << "y: \n" << std::endl;
 		f64 y = interpolate_position(dft.y[0], m_config);
-		std::cout << "x,y: " << x << "," <<  y << std::endl;
+		//  std::cout << "x,y: " << x << "," <<  y << std::endl;
+		//  if (x < 30.0 && y < 5) {
+			//  std::abort();
+		//  }
 
 		if (std::isnan(x) || std::isnan(y)) {
 			//  std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;

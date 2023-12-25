@@ -81,10 +81,10 @@ static std::string json_window_row(const ipts_pen_dft_window_row &row)
 	ss << "{";
 	ss << Entry("freq", row.frequency);
 	ss << Entry("mag", row.magnitude);
-	ss << Entry<u32>("first", row.first);
-	ss << Entry<u32>("last", row.last);
-	ss << Entry<u32>("mid", row.mid);
-	ss << Entry<u32>("zero", row.zero);
+	ss << Entry<i32>("first", row.first);
+	ss << Entry<i32>("last", row.last);
+	ss << Entry<i32>("mid", row.mid);
+	ss << Entry<i32>("zero", row.zero);
 	ss << Entry<std::string>("iq", json_window_row_iq(row), false);
 	ss << "}";
 
