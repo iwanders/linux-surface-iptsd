@@ -182,7 +182,7 @@ public:
 	{
 		if (is_logging_json()) {
 			if (m_metadata.has_value()) {
-				append_json(json_entry("metadata", json_metadata(m_metadata.value())));
+				append_json(json_entry("METADATA", json_metadata(m_metadata.value())));
 			}
 			// dump the file.
 			const auto path = std::filesystem::path{m_config.output_json};
