@@ -1,0 +1,6 @@
+nix develop current#pkgs.iptsd
+
+ninja -C build
+
+IPTSD_CONFIG_FILE=iw_config.ini ./build/src/iptsd-show /dev/hidraw1
+
