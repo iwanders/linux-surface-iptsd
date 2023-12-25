@@ -44,7 +44,7 @@ public:
 			this->handle_position(dft, false);
 			break;
 		case IPTS_DFT_ID_POSITION2:
-			this->handle_position(dft, true);
+			//  this->handle_position(dft, true);
 			{
 				//  std::cout << "p0: " << m_stylus.x << ", " << m_stylus.y << std::endl;
 				//  std::cout << "pring: " << m_stylus.x_ring << ", " << m_stylus.y_ring << std::endl;
@@ -98,17 +98,17 @@ public:
 
 		// get phase-aligned amplitudes of the three center components
 		const f64 amp = std::hypot(gsl::at(row.real, maxi), gsl::at(row.imag, maxi));
-		//  std::cout << "amp : " << amp <<  std::endl;
-		//  std::cout << "maxi : " << (int)maxi <<  std::endl;
-		//  std::cout << "maxd : " << maxd <<  std::endl;
+		std::cout << "amp : " << amp <<  std::endl;
+		std::cout << "maxi : " << (int)maxi <<  std::endl;
+		std::cout << "maxd : " << maxd <<  std::endl;
 
 		if (amp < casts::to<f64>(config.dft_position_min_amp))
 			return casts::to<f64>(NAN);
 
 		const f64 sin = gsl::at(row.real, maxi) / amp;
 		const f64 cos = gsl::at(row.imag, maxi) / amp;
-		//  std::cout << "sin : " << sin <<  std::endl;
-		//  std::cout << "cos : " << cos <<  std::endl;
+		std::cout << "sin : " << sin <<  std::endl;
+		std::cout << "cos : " << cos <<  std::endl;
 
 
 		std::array<f64, 3> x = {
@@ -116,25 +116,25 @@ public:
 			amp,
 			sin * gsl::at(row.real, maxi + 1) + cos * gsl::at(row.imag, maxi + 1),
 		};
-		//  std::cout << "x[0] : " << x[0] <<  std::endl;
-		//  std::cout << "x[1] : " << x[1] <<  std::endl;
-		//  std::cout << "x[2] : " << x[2] <<  std::endl;
+		std::cout << "x[0] : " << x[0] <<  std::endl;
+		std::cout << "x[1] : " << x[1] <<  std::endl;
+		std::cout << "x[2] : " << x[2] <<  std::endl;
 
 		// convert the amplitudes into something we can fit a parabola to
 		for (u8 i = 0; i < 3; i++)
 			x.at(i) = std::pow(std::abs(x.at(i)), config.dft_position_exp);
 
-		//  for (u8 i = 0; i < 3; i++)
-			//  std::cout << "x.at(: " << (int)i << "): " << x.at(i) <<  std::endl;
+		for (u8 i = 0; i < 3; i++)
+			std::cout << "x.at(: " << (int)i << "): " << x.at(i) <<  std::endl;
 			
 		// check orientation of fitted parabola
-		//  std::cout << "orient : " << (x[0] + x[2] <= 2 * x[1]) <<  std::endl;
+		std::cout << "orient : " << (x[0] + x[2] <= 2 * x[1]) <<  std::endl;
 		if (x[0] + x[2] <= 2 * x[1])
 			return casts::to<f64>(NAN);
 
 		// find critical point of fitted parabola
 		const f64 d = (x[0] - x[2]) / (2 * (x[0] - 2 * x[1] + x[2]));
-		//  std::cout << "d : " << d <<  std::endl;
+		std::cout << "d : " << d <<  std::endl;
 
 		return row.first + maxi + std::clamp(d, mind, maxd);
 	}
@@ -175,8 +175,11 @@ private:
 		m_imag = dft.x[0].imag[IPTS_DFT_NUM_COMPONENTS / 2] +
 			 dft.y[0].imag[IPTS_DFT_NUM_COMPONENTS / 2];
 
+		std::cout << "x: \n" << std::endl;
 		f64 x = interpolate_position(dft.x[0], m_config);
+		std::cout << "y: \n" << std::endl;
 		f64 y = interpolate_position(dft.y[0], m_config);
+		std::cout << "x,y: " << x << "," <<  y << std::endl;
 
 		if (std::isnan(x) || std::isnan(y)) {
 			//  std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
