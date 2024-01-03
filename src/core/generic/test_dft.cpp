@@ -2,77 +2,7 @@
 
 #include "dft.hpp"
 
-
-using QuadraticCoefficients = std::array<f64, 3>;
-using Data = std::array<f64, IPTS_DFT_NUM_COMPONENTS>;
-using Weights = std::array<f64, IPTS_DFT_NUM_COMPONENTS>;
-[[nodiscard]] std::optional<QuadraticCoefficients> fitQuadratic(const Data &data, const Weights &weights){
-
-  // Convert data to the y vector.
-  auto y = Vector<f64, IPTS_DFT_NUM_COMPONENTS>(data.data());
-  //  std::cout << "y:" << y << std::endl;
-
-  // First, make the vandermonde matrix, with x ranging from 0 to 8, and three terms per row.
-  Matrix<f64, IPTS_DFT_NUM_COMPONENTS, 3> V;
-  for (std::size_t m = 0; m < IPTS_DFT_NUM_COMPONENTS; m++)
-  {
-    for (std::size_t n = 0; n < 3; n++) {
-      V(m, (3 - 1)-n) = std::pow(static_cast<f64>(m), n);
-    }
-  }
-  //  std::cout << "V:" << V << std::endl;
-
-  // Next, apply the weights.
-  Eigen::DiagonalMatrix<f64, IPTS_DFT_NUM_COMPONENTS> diag_weights;
-  for (std::size_t m = 0; m < IPTS_DFT_NUM_COMPONENTS; m++)
-  {
-    diag_weights.diagonal()[m] = weights[m];
-  }
-
-  V = diag_weights * V;
-  //  std::cout << "V:" << V << std::endl;
-  y = diag_weights * y;
-  //  std::cout << "y:" << y << std::endl;
-
-  // Finally, all setup is complete, do the least squares fit.
-  //  std::cout << "Squared: " << ((V.transpose() * V)) << std::endl;
-  const auto left = V.transpose() * V;
-  //  std::cout << "left: " << left << std::endl;
-  const auto right = V.transpose()  * y ;
-  //  std::cout << "right: " << right << std::endl;
-  auto solver = left.ldlt();
-  auto result = solver.solve(right );
-  //  std::cout << "result:" << result << std::endl;
-
-  QuadraticCoefficients coefficients;
-  for (std::size_t i = 0 ; i < 3; i++) {
-    coefficients[i] = result(i);
-    //  coefficients[i] = 1;
-  }
-  
-  return coefficients;
-}
-
-[[nodiscard]] std::optional<f32> interpolate_position_poly(struct ipts_pen_dft_window_row &row)
-{
-  static const Weights gaussian_0_7_stddev_at_4{0.12992260830505947, 0.3172836267015646, 0.6003730411984044, 0.8802485040505603, 1.0, 0.8802485040505603, 0.6003730411984044, 0.3172836267015646, 0.12992260830505947};
-
-  Data data;
-  for (std::size_t i = 0; i < IPTS_DFT_NUM_COMPONENTS; i++) {
-    data[i] = std::sqrt(row.real[i]* row.real[i] + row.imag[i] * row.imag[i]);
-  }
-
-  const auto fitted = fitQuadratic(data, gaussian_0_7_stddev_at_4);
-  if (!fitted.has_value()) {
-    return {};
-  }
-
-  const auto& coeff = fitted.value();
-  // Take the derivative
-  const auto peak = -coeff[1] / (2.0 * coeff[0]);
-  return peak + row.first;
-}
-
+using namespace iptsd::core;
 
 int main(const int /*argc*/, const char **/*argv*/)
 {
@@ -116,7 +46,10 @@ int main(const int /*argc*/, const char **/*argv*/)
 	const auto res = iptsd::core::DftStylus::interpolate_position(row, config);
 	std::cout << "Res:" << res << std::endl;
 
-        const auto res2 = interpolate_position_poly(row);
-	std::cout << "res2:" << res2.value() << std::endl; 
+
+	static const Weights gaussian_0_7_stddev_at_4{0.12992260830505947, 0.3172836267015646, 0.6003730411984044, 0.8802485040505603, 1.0, 0.8802485040505603, 0.6003730411984044, 0.3172836267015646, 0.12992260830505947};
+	const auto res2 = interpolate_position_poly(row, gaussian_0_7_stddev_at_4);
+	std::cout << "res2:" << res2.value() << std::endl;
+
 	return 0;
 }

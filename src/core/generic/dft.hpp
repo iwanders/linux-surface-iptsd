@@ -16,6 +16,73 @@
 
 namespace iptsd::core {
 
+using QuadraticCoefficients = std::array<f64, 3>;
+using Data = std::array<f64, IPTS_DFT_NUM_COMPONENTS>;
+using Weights = std::array<f64, IPTS_DFT_NUM_COMPONENTS>;
+[[nodiscard]] std::optional<QuadraticCoefficients> fitQuadratic(const Data &data, const Weights &weights)
+{
+	// Convert data to the y vector.
+	auto y = Vector<f64, IPTS_DFT_NUM_COMPONENTS>(data.data());
+
+	// First, make the Vandermonde matrix, with x ranging from 0 to 8, and three terms per row.
+	Matrix<f64, IPTS_DFT_NUM_COMPONENTS, 3> V;
+	for (std::size_t m = 0; m < IPTS_DFT_NUM_COMPONENTS; m++)
+	{
+		for (std::size_t n = 0; n < 3; n++) {
+			V(m, (3 - 1)-n) = std::pow(static_cast<f64>(m), n);
+		}
+	}
+
+	// Next, apply the weights, first creating a diagonal matrix that holds them.
+	Eigen::DiagonalMatrix<f64, IPTS_DFT_NUM_COMPONENTS> diag_weights;
+	for (std::size_t m = 0; m < IPTS_DFT_NUM_COMPONENTS; m++)
+	{
+		diag_weights.diagonal()[m] = weights[m];
+	}
+
+	// Then multiple the Vandermonde matrix and data vector with the weights.
+	V = diag_weights * V;
+	y = diag_weights * y;
+
+	// All setup is complete, do the least squares fit.
+	const auto A = V.transpose() * V;
+	const auto x = V.transpose() * y;
+	const auto solver = A.ldlt();
+	const auto result = solver.solve(x);
+
+	// Convert the found results back into the return type.
+	QuadraticCoefficients coefficients;
+	for (std::size_t i = 0 ; i < 3; i++) {
+		coefficients[i] = result(i);
+	}
+
+	return coefficients;
+}
+
+[[nodiscard]] std::optional<f32> interpolate_position_poly(const struct ipts_pen_dft_window_row &row, const Weights &weights)
+{
+	// Convert the row into usable data for the fit.
+	Data data;
+	for (std::size_t i = 0; i < IPTS_DFT_NUM_COMPONENTS; i++) {
+		data[i] = std::sqrt(row.real[i]* row.real[i] + row.imag[i] * row.imag[i]);
+	}
+
+	// Calculate the polynomial fit.
+	const auto fitted = fitQuadratic(data, weights);
+
+	if (!fitted.has_value()) {
+		return {};
+	}
+	const auto& coeff = fitted.value();
+
+	// Determine the coordinate of the peak by taking the derivative of the quadratic function
+	// and solving for its zero crossing:
+	const auto peak = -coeff[1] / (2.0 * coeff[0]);
+	return peak + row.first;
+}
+
+
+
 class DftStylus {
 private:
 	Config m_config;
@@ -41,7 +108,7 @@ public:
 	{
 		switch (dft.type) {
 		case IPTS_DFT_ID_POSITION:
-			this->handle_position(dft, false);
+			this->handle_position(dft);
 			break;
 		case IPTS_DFT_ID_POSITION2:
 			//  this->handle_position(dft, true);
@@ -149,20 +216,19 @@ private:
 	 *
 	 * @param[in] dft The DFT window (with type == IPTS_DFT_ID_POSITION)
 	 */
-	void handle_position(const ipts::DftWindow &dft, const bool is_ring)
+	void handle_position(const ipts::DftWindow &dft)
 	{
+		//  static constexpr Weights gaussian_at_4_stddev_0_4 {0.0019304541362277093, 0.02972921638615875, 0.2096113871510978, 0.676633846161729, 1.0, 0.676633846161729, 0.2096113871510978, 0.02972921638615875, 0.0019304541362277093};
+		static constexpr Weights gaussian_at_4_stddev_0_7 {0.12992260830505947, 0.3172836267015646, 0.6003730411984044, 0.8802485040505603, 1.0, 0.8802485040505603, 0.6003730411984044, 0.3172836267015646, 0.12992260830505947};
+
 		if (dft.rows <= 1) {
-			if (!is_ring) {
-				this->lift();
-			}
+			this->lift();
 			return;
 		}
 
 		if (dft.x[0].magnitude <= m_config.dft_position_min_mag ||
 		    dft.y[0].magnitude <= m_config.dft_position_min_mag) {
-			if (!is_ring) {
-				this->lift();
-			}
+			this->lift();
 			return;
 		}
 
@@ -181,8 +247,10 @@ private:
 
 		//  std::cout << "x: \n" << std::endl;
 		f64 x = interpolate_position(dft.x[0], m_config);
+                //  f64 x = interpolate_position_poly(dft.x[0], gaussian_at_4_stddev_0_4).value();
 		//  std::cout << "y: \n" << std::endl;
 		f64 y = interpolate_position(dft.y[0], m_config);
+                //  f64 y = interpolate_position_poly(dft.y[0], gaussian_at_4_stddev_0_4).value();
 		//  std::cout << "x,y: " << x << "," <<  y << std::endl;
 		//  if (x < 30.0 && y < 5) {
 			//  std::abort();
@@ -190,9 +258,7 @@ private:
 
 		if (std::isnan(x) || std::isnan(y)) {
 			//  std::cout << "Interpolate is nan, lifting, x, y: " << x << ", " << y << std::endl;
-			if (!is_ring) {
-				this->lift();
-			}
+			this->lift();
 			return;
 		}
 
@@ -210,8 +276,10 @@ private:
 		if (dft.x[1].magnitude > m_config.dft_tilt_min_mag &&
 		    dft.y[1].magnitude > m_config.dft_tilt_min_mag) {
 			// calculate tilt angle from relative position of secondary transmitter
-			f64 xt = interpolate_position(dft.x[1], m_config);
-			f64 yt = interpolate_position(dft.y[1], m_config);
+			//  f64 xt = interpolate_position(dft.x[1], m_config);
+			f64 xt = interpolate_position_poly(dft.x[1], gaussian_at_4_stddev_0_7).value();
+			//  f64 yt = interpolate_position(dft.y[1], m_config);
+			f64 yt = interpolate_position_poly(dft.y[1], gaussian_at_4_stddev_0_7).value();
 
 
 			if (!std::isnan(xt) && !std::isnan(yt)) {
@@ -224,10 +292,8 @@ private:
 				if (m_config.invert_y)
 					yt = 1 - yt;
 
-				if (!is_ring) {
-					m_stylus.x_t = xt;
-					m_stylus.y_t = yt;
-				}
+				m_stylus.x_t = xt;
+				m_stylus.y_t = yt;
 
 				xt -= x;
 				yt -= y;
@@ -244,13 +310,8 @@ private:
 		}
 
 
-		if (!is_ring) {
-			m_stylus.x = std::clamp(x, 0.0, 1.0);
-			m_stylus.y = std::clamp(y, 0.0, 1.0);
-		} else {
-			m_stylus.x_ring = std::clamp(x, 0.0, 1.0);
-			m_stylus.y_ring = std::clamp(y, 0.0, 1.0);
-		}
+		m_stylus.x = std::clamp(x, 0.0, 1.0);
+		m_stylus.y = std::clamp(y, 0.0, 1.0);
 	}
 
 	/*!
