@@ -113,8 +113,10 @@ public:
 
 		// Signal the application that the data flow has started.
 		m_application->on_start();
+		static int index = 0;
 
 		while (!m_should_stop && local.size() > 0) {
+			index++;
 			try {
 				/*
 				 * Abort if there is not enough data left.
@@ -123,15 +125,23 @@ public:
 					break;
 
 				const auto size = local.read<u64>();
-
 				/*
 				 * This is an error baked into the format.
 				 * The writer should simply write as many bytes as it just received,
 				 * instead of writing the entire buffer all the time.
 				 */
 				Reader buffer = local.sub(casts::to<usize>(m_info.buffer_size));
+                                const auto data_span = buffer.subspan(casts::to<usize>(size));
 
-				m_application->process(buffer.subspan(casts::to<usize>(size)));
+				if (std::getenv("IPTS_DUMP_FILE_CHUNKS")) {
+					std::cout << "Reading size: " << size << std::endl;
+					{
+						std::ofstream outfile{std::string("/tmp/out_chunks/i_") + std::to_string(index) + "_" + std::to_string(size) + ".bin"};
+						outfile.write(reinterpret_cast<const char*>(data_span.data()), data_span.size());
+					}
+				}
+
+				m_application->process(data_span);
 			} catch (std::exception &e) {
 				spdlog::warn(e.what());
 				continue;
