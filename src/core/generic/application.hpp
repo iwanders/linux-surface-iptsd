@@ -11,6 +11,7 @@
 #include <common/types.hpp>
 #include <contacts/finder.hpp>
 #include <ipts/data.hpp>
+#include <ipts/device.hpp>
 #include <ipts/parser.hpp>
 
 #include <spdlog/spdlog.h>
@@ -153,6 +154,11 @@ public:
 	 */
 	virtual void on_stop() {};
 
+	/*!
+	 * Called at setup with the current device pointer, for applications that need
+	 * direct access. This is set before on_start is called.
+	 */
+	virtual void set_device(ipts::Device * /* unused */) {};
 protected:
 	/*!
 	 * For replacing the parsing step of the data with application

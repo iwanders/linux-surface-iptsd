@@ -127,6 +127,11 @@ public:
 		m_hid->set_feature(buffer);
 	}
 
+	void set_feature(const gsl::span<u8> buffer) const
+	{
+		m_hid->set_feature(buffer);
+	}
+
 	/*!
 	 * Checks whether a buffer contains IPTS touch data.
 	 *

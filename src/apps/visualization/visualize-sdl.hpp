@@ -11,6 +11,7 @@
 #include <core/generic/config.hpp>
 #include <core/generic/device.hpp>
 #include <ipts/data.hpp>
+#include <ipts/device.hpp>
 
 #include <SDL.h>
 #include <cairomm/cairomm.h>
@@ -35,6 +36,15 @@ private:
 
 	clock::time_point m_last_draw {};
 
+	ipts::Device * m_device{nullptr};
+
+	void perform_feature_setup() {
+		// 09 8e a5 00 02 00 00 00 00 00 00 00 00 00 00 00 
+	
+		//  m_device->set_feature();
+	}
+	void perform_feature_update() {
+	}
 public:
 	VisualizeSDL(const core::Config &config,
 		     const core::DeviceInfo &info,
@@ -44,6 +54,10 @@ public:
 		SDL_Init(SDL_INIT_VIDEO);
 	}
 
+	void set_device(ipts::Device * device) override
+	{
+		m_device = device;
+	} 
 	void on_start() override
 	{
 		// Create an SDL window
@@ -62,11 +76,14 @@ public:
 
 		// Create context for issuing draw commands.
 		m_cairo = Cairo::Context::create(m_tex);
+
+		perform_feature_setup();
 	}
 
 	void on_data(const gsl::span<u8> data) override
 	{
 		Visualize::on_data(data);
+		perform_feature_update();
 
 		// Handle window events, such as the X11_NET_WM_PING
 		// event that is used to detect stuck programs.

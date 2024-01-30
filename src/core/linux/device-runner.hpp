@@ -107,6 +107,9 @@ public:
 		// Enable multitouch mode
 		m_ipts.set_mode(ipts::Mode::Multitouch);
 
+		// Register the device with the application.
+		m_application->set_device(&m_ipts);
+
 		// Signal the application that the data flow has started.
 		m_application->on_start();
 
