@@ -112,6 +112,25 @@ static std::string json_dft_window(const ipts::DftWindow &data)
 	return ss.str();
 }
 
+static std::string json_stylus_data(const ipts::StylusData &data)
+{
+	std::stringstream ss;
+	ss << "{";
+	ss << Entry<u16>("timestamp", data.timestamp);
+	ss << Entry<f64>("x", data.x);
+	ss << Entry<f64>("y", data.y);
+	ss << Entry<f64>("pressure", data.pressure);
+	ss << Entry<f64>("altitude", data.altitude);
+	ss << Entry<f64>("azimuth", data.azimuth);
+	ss << Entry<f64>("serial", data.serial);
+	ss << Entry<f64>("x_t", data.x_t);
+	ss << Entry<f64>("y_t", data.y_t);
+	ss << Entry<f64>("yx_ring", data.x_ring);
+	ss << "}";
+
+	return ss.str();
+}
+
 static std::string json_metadata(const ipts::Metadata &data)
 {
 	std::stringstream ss;
@@ -215,6 +234,7 @@ public:
 	void on_stylus(const ipts::StylusData &data) override
 	{
 		m_recent_stylus = data;
+		append_json(json_entry("STYLUS_DATA", json_stylus_data(data)));
 	}
 
 	void on_dft(const ipts::DftWindow &data) override
