@@ -29,7 +29,7 @@ public:
 	void read(const gsl::span<u8> dest)
 	{
 		if (dest.size() > this->size())
-			throw std::runtime_error("Tried to read more data than available!");
+			throw std::runtime_error("Tried to read " + std::to_string(dest.size()) + " bytes, which is more data than available at " + std::to_string(m_index) + "!");
 
 		const gsl::span<u8> src = this->subspan(dest.size());
 		std::copy(src.begin(), src.end(), dest.begin());
@@ -43,7 +43,7 @@ public:
 	void skip(const usize size)
 	{
 		if (size > this->size())
-			throw std::runtime_error("Tried to read more data than available!");
+			throw std::runtime_error("Tried to skip " + std::to_string(size) + " bytes, which is more data than available at " + std::to_string(m_index) + "!");
 
 		m_index += size;
 	}
@@ -59,6 +59,16 @@ public:
 	}
 
 	/*!
+	 * Return the current position of the reader.
+	 *
+	 * @return The amount of bytes that have been read.
+	 */
+	[[nodiscard]] usize position() const
+	{
+		return m_index;
+	}
+
+	/*!
 	 * Takes a chunk of bytes from the current position and splits it off.
 	 *
 	 * @param[in] size How many bytes to take.
@@ -67,7 +77,7 @@ public:
 	gsl::span<u8> subspan(const usize size)
 	{
 		if (size > this->size())
-			throw std::runtime_error("Tried to read more data than available!");
+			throw std::runtime_error("Tried to read " + std::to_string(size) + " bytes, which is more data than available at " + std::to_string(m_index) + "!");
 
 		const gsl::span<u8> sub = m_data.subspan(m_index, size);
 		this->skip(size);

@@ -142,8 +142,9 @@ public:
 				}
 
 				m_application->process(data_span);
-			} catch (std::exception &e) {
-				spdlog::warn(e.what());
+			} catch (const std::exception &e) {
+				const auto global_position = m_reader.value().position() + local.position();
+				spdlog::warn(std::string("Error at global position: ") + std::to_string(global_position) + " -> " + std::string(e.what()));
 				continue;
 			}
 		}
