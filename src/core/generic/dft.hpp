@@ -220,6 +220,7 @@ private:
 	{
 		//  static constexpr Weights gaussian_at_4_stddev_0_4 {0.0019304541362277093, 0.02972921638615875, 0.2096113871510978, 0.676633846161729, 1.0, 0.676633846161729, 0.2096113871510978, 0.02972921638615875, 0.0019304541362277093};
 		static constexpr Weights gaussian_at_4_stddev_0_7 {0.12992260830505947, 0.3172836267015646, 0.6003730411984044, 0.8802485040505603, 1.0, 0.8802485040505603, 0.6003730411984044, 0.3172836267015646, 0.12992260830505947};
+		std::ignore = gaussian_at_4_stddev_0_7;
 
 		if (dft.rows <= 1) {
 			this->lift();
@@ -276,10 +277,10 @@ private:
 		if (dft.x[1].magnitude > m_config.dft_tilt_min_mag &&
 		    dft.y[1].magnitude > m_config.dft_tilt_min_mag) {
 			// calculate tilt angle from relative position of secondary transmitter
-			//  f64 xt = interpolate_position(dft.x[1], m_config);
-			f64 xt = interpolate_position_poly(dft.x[1], gaussian_at_4_stddev_0_7).value();
-			//  f64 yt = interpolate_position(dft.y[1], m_config);
-			f64 yt = interpolate_position_poly(dft.y[1], gaussian_at_4_stddev_0_7).value();
+			f64 xt = interpolate_position(dft.x[1], m_config);
+			//  f64 xt = interpolate_position_poly(dft.x[1], gaussian_at_4_stddev_0_7).value();
+			f64 yt = interpolate_position(dft.y[1], m_config);
+			//  f64 yt = interpolate_position_poly(dft.y[1], gaussian_at_4_stddev_0_7).value();
 
 
 			if (!std::isnan(xt) && !std::isnan(yt)) {

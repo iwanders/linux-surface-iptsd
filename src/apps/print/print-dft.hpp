@@ -117,6 +117,10 @@ static std::string json_stylus_data(const ipts::StylusData &data)
 	std::stringstream ss;
 	ss << "{";
 	ss << Entry<u16>("timestamp", data.timestamp);
+	ss << Entry<bool>("proximity", data.proximity);
+	ss << Entry<bool>("contact", data.contact);
+	ss << Entry<bool>("button", data.button);
+	ss << Entry<bool>("rubber", data.rubber);
 	ss << Entry<f64>("x", data.x);
 	ss << Entry<f64>("y", data.y);
 	ss << Entry<f64>("pressure", data.pressure);
@@ -125,7 +129,8 @@ static std::string json_stylus_data(const ipts::StylusData &data)
 	ss << Entry<f64>("serial", data.serial);
 	ss << Entry<f64>("x_t", data.x_t);
 	ss << Entry<f64>("y_t", data.y_t);
-	ss << Entry<f64>("yx_ring", data.x_ring);
+	ss << Entry<f64>("x_ring", data.x_ring);
+	ss << Entry<f64>("y_ring", data.y_ring, false);
 	ss << "}";
 
 	return ss.str();
